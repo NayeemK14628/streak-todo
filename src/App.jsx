@@ -226,9 +226,26 @@ export default function App() {
       <section className="taskSection">
         <div className="sectionTitle"><h2>All tasks</h2><span>{tasks.length}</span></div>
         {tasks.map((task) => <article className="compactTask" key={task.id}>
-          <div><strong>{task.title}</strong><small>{recurrenceLabel(task)} · Best/current: 🔥 {calculateStreak(task)}</small></div>
-          <button className="iconButton" onClick={() => beginEdit(task)}>Edit</button>
-        </article>)}
+  <div>
+    <strong>{task.title}</strong>
+    <small>
+      {recurrenceLabel(task)} · Best/current: 🔥 {calculateStreak(task)}
+    </small>
+  </div>
+
+  <div className="taskActions">
+    <button className="iconButton" onClick={() => beginEdit(task)}>
+      Edit
+    </button>
+
+    <button
+      className="iconButton danger"
+      onClick={() => removeTask(task)}
+    >
+      Delete
+    </button>
+  </div>
+</article>)}
       </section>
     </main>
   );
