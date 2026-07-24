@@ -5,10 +5,9 @@ import {
   deleteDoc,
   doc,
   onSnapshot,
-  orderBy,
-  query,
   serverTimestamp,
   updateDoc,
+  writeBatch,
 } from 'firebase/firestore';
 import {
   onAuthStateChanged,
@@ -81,9 +80,16 @@ export default function App() {
       setTasks([]);
       return undefined;
     }
-    const tasksQuery = query(collection(db, 'users', user.uid, 'tasks'), orderBy('createdAt', 'desc'));
-    return onSnapshot(tasksQuery, (snapshot) => {
-      setTasks(snapshot.docs.map((item) => ({ id: item.id, ...item.data() })));
+    const tasksCollection = collection(db, 'users', user.uid, 'tasks');
+    return onSnapshot(tasksCollection, (snapshot) => {
+      const loadedTasks = snapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
+      loadedTasks.sort((a, b) => {
+        if (typeof a.order === 'number' && typeof b.order === 'number') return a.order - b.order;
+        if (typeof a.order === 'number') return -1;
+        if (typeof b.order === 'number') return 1;
+        return (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0);
+      });
+      setTasks(loadedTasks);
     }, (err) => setError(err.message));
   }, [user]);
 
@@ -91,14 +97,12 @@ export default function App() {
   const doneCount = todaysTasks.filter((task) => completedToday(task)).length;
 
   async function login() {
-  setError('');
-
-  try {
-    await signInWithPopup(auth, googleProvider);
-  } catch (err) {
-    console.error('Google sign-in failed:', err);
-    setError(`${err.code}: ${err.message}`);
-  }
+    setError('');
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (err) {
+      setError(err.message);
+    }
   }
 
   function resetForm() {
@@ -128,6 +132,7 @@ export default function App() {
       else await addDoc(collection(db, 'users', user.uid, 'tasks'), {
         ...payload,
         completedDates: [],
+        order: tasks.length,
         createdAt: serverTimestamp(),
       });
       resetForm();
@@ -156,6 +161,26 @@ export default function App() {
 
   async function removeTask(task) {
     if (confirm(`Delete “${task.title}”?`)) await deleteDoc(doc(db, 'users', user.uid, 'tasks', task.id));
+  }
+
+  async function moveTask(taskId, direction) {
+    const currentIndex = tasks.findIndex((task) => task.id === taskId);
+    const nextIndex = currentIndex + direction;
+    if (currentIndex < 0 || nextIndex < 0 || nextIndex >= tasks.length) return;
+
+    const reordered = [...tasks];
+    [reordered[currentIndex], reordered[nextIndex]] = [reordered[nextIndex], reordered[currentIndex]];
+    setTasks(reordered);
+
+    try {
+      const batch = writeBatch(db);
+      reordered.forEach((task, index) => {
+        batch.update(doc(db, 'users', user.uid, 'tasks', task.id), { order: index });
+      });
+      await batch.commit();
+    } catch (err) {
+      setError(err.message);
+    }
   }
 
   function toggleDay(day) {
@@ -226,26 +251,24 @@ export default function App() {
       <section className="taskSection">
         <div className="sectionTitle"><h2>All tasks</h2><span>{tasks.length}</span></div>
         {tasks.map((task) => <article className="compactTask" key={task.id}>
-  <div>
-    <strong>{task.title}</strong>
-    <small>
-      {recurrenceLabel(task)} · Best/current: 🔥 {calculateStreak(task)}
-    </small>
-  </div>
-
-  <div className="taskActions">
-    <button className="iconButton" onClick={() => beginEdit(task)}>
-      Edit
-    </button>
-
-    <button
-      className="iconButton danger"
-      onClick={() => removeTask(task)}
-    >
-      Delete
-    </button>
-  </div>
-</article>)}
+          <div><strong>{task.title}</strong><small>{recurrenceLabel(task)} · Best/current: 🔥 {calculateStreak(task)}</small></div>
+          <div className="taskActions">
+            <button
+              className="iconButton orderButton"
+              onClick={() => moveTask(task.id, -1)}
+              disabled={tasks.indexOf(task) === 0}
+              aria-label={`Move ${task.title} up`}
+            >↑</button>
+            <button
+              className="iconButton orderButton"
+              onClick={() => moveTask(task.id, 1)}
+              disabled={tasks.indexOf(task) === tasks.length - 1}
+              aria-label={`Move ${task.title} down`}
+            >↓</button>
+            <button className="iconButton" onClick={() => beginEdit(task)}>Edit</button>
+            <button className="iconButton danger" onClick={() => removeTask(task)}>Delete</button>
+          </div>
+        </article>)}
       </section>
     </main>
   );

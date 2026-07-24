@@ -17,10 +17,9 @@ header { display: flex; justify-content: space-between; align-items: center; mar
 .formActions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }.primary { border: 0; color: white; background: linear-gradient(135deg, #7c3aed, #4f46e5); border-radius: 13px; padding: 12px 17px; font-weight: 750; }
 .taskSection { padding: 18px; margin-top: 18px; }.sectionTitle { display: flex; justify-content: space-between; align-items: center; }.sectionTitle h2 { margin-bottom: 14px; }.sectionTitle span { color: #94a3b8; }
 .task { display: grid; grid-template-columns: auto 1fr auto auto; gap: 12px; align-items: center; padding: 15px 0; border-top: 1px solid #243047; }.task:first-of-type { border-top: 0; }.check { width: 34px; height: 34px; border: 2px solid #64748b; border-radius: 11px; background: #0b1220; color: white; font-weight: 900; }.done .check { background: #7c3aed; border-color: #7c3aed; }.taskInfo h3 { margin-bottom: 4px; }.taskInfo p, .compactTask small { color: #94a3b8; margin: 0; }.done h3 { text-decoration: line-through; color: #64748b; }.iconButton { font-size: 13px; }.danger { color: #fca5a5; }.empty { color: #94a3b8; padding: 14px 0; }
-.compactTask { display: flex; justify-content: space-between; align-items: center; gap: 14px; border-top: 1px solid #243047; padding: 13px 0; }.compactTask:first-of-type { border-top: 0; }.compactTask small { display: block; margin-top: 4px; }.error { color: #fca5a5; background: rgba(127,29,29,.25); padding: 12px; border-radius: 12px; }
+.compactTask { display: flex; justify-content: space-between; align-items: center; gap: 14px; border-top: 1px solid #243047; padding: 13px 0; }.compactTask:first-of-type { border-top: 0; }.compactTask small { display: block; margin-top: 4px; }.taskActions { display: flex; gap: 8px; flex-shrink: 0; }.error { color: #fca5a5; background: rgba(127,29,29,.25); padding: 12px; border-radius: 12px; }
 @media (max-width: 620px) { .appShell { padding-left: 12px; padding-right: 12px; } header h1 { font-size: 34px; }.task { grid-template-columns: auto 1fr; }.task .iconButton { grid-column: auto; }.dayPicker { gap: 5px; }.dayPicker button { border-radius: 10px; }.taskForm, .taskSection { border-radius: 18px; }.task { gap: 9px; } }
-.taskActions {
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
-}
+
+.orderButton { min-width: 38px; font-size: 18px; line-height: 1; }
+.iconButton:disabled { opacity: .35; cursor: not-allowed; }
+@media (max-width: 620px) { .compactTask { align-items: flex-start; flex-direction: column; } .taskActions { width: 100%; flex-wrap: wrap; } }
